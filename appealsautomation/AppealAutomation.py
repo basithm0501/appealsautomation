@@ -5,6 +5,7 @@ import openpyxl
 from openpyxl.styles import Font
 from datetime import datetime
 from openpyxl.utils import get_column_letter, column_index_from_string
+import re
 
 TEMPLATE = "AppealsTemplate.xlsx"
 
@@ -86,7 +87,7 @@ def create_data_list(csv_path, row_num):
     return header_row, data_row
 
 def create_appeal_sheet(wb, header, row):
-    org_nickname = row[11].strip().replace(" ", "_")
+    org_nickname = re.sub(r'[\\/*?:\[\]]', '_', row[11].strip().replace(" ", "_"))
     sheet_name = org_nickname[:31]
     ws = wb.create_sheet(title=sheet_name)
     copy_template_to_sheet(wb, ws, TEMPLATE)
@@ -209,9 +210,9 @@ def fill_program1(ws, data, appeal_num):
         # Contracts
         contract_indices = [84, 85, 86, 87, 88, 89, 90, 91]
         contracts = [data[i] for i in contract_indices]
-        ws["C9"] = ", ".join(str(c) for c in contracts if str(c).strip())
+        ws["B16"] = ", ".join(str(c) for c in contracts if str(c).strip())
 
-        ws["B16"] = data[92]
+        ws["B9"] = data[92]
 
         # Other
         try:
