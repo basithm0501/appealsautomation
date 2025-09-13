@@ -14,8 +14,8 @@ def create_appeals_workbook(csv_path, row_num):
     print("✅ -- Workbook created. --")
     create_template_master_sheet(wb, "AppealsTemplate.xlsx")
     #TODO update to take multiple rows
-    header, row, col_letter_to_value = create_data_list(csv_path, row_num)
-    create_appeal_sheet(wb, row, col_letter_to_value)
+    header, row = create_data_list(csv_path, row_num)
+    create_appeal_sheet(wb, header, row)
 
     date_str = datetime.now().strftime("%Y-%m-%d")
     wb.save(f"CAP_Workbook_{date_str}.xlsx")
@@ -77,35 +77,30 @@ def create_data_list(csv_path, row_num):
     with open(csv_path, newline='', encoding='utf-8') as f:
         reader = csv.reader(f)
         all_rows = list(reader)
-    # all_rows[0] and all_rows[1] are headers, data starts at all_rows[2]
     if row_num < 1 or row_num > len(all_rows):
         raise ValueError('Row number out of range')
-    header_row = all_rows[0]
+    header_row = all_rows[2]  # Assuming the third row (index 2) is the header
     data_row = all_rows[row_num - 1]  # row_num is 1-based
-
-    # Build a mapping from Excel column letter to value
-    col_letter_to_value = {}
-    for idx, value in enumerate(data_row):
-        col_letter = get_column_letter(idx + 1)  # Excel columns are 1-based
-        col_letter_to_value[col_letter] = value
-
     print(f"------------------------ NEW SHEET ------------------------")
     print(f"✅ -- Data processed for row: {row_num} --")
-    return header_row, data_row, col_letter_to_value
+    return header_row, data_row
 
-def create_appeal_sheet(wb, data, row_num):
-    org_nickname = data["L"].strip().replace(" ", "_")
-    # Excel sheet name limit is 31 characters
+def create_appeal_sheet(wb, header, row):
+    org_nickname = row[11].strip().replace(" ", "_")
     sheet_name = org_nickname[:31]
     ws = wb.create_sheet(title=sheet_name)
     copy_template_to_sheet(wb, ws, TEMPLATE)
     print(f"✅ -- Capsheet Created for: {org_nickname} --")
 
-    # Logic to determine both appeal requests and fill appropriate sections
-    appeal1 = data["Select Type of Funding for First Appeals Request"]
-    appeal2 = data['Select Type of Funding (please choose "N/A" if you would not like to appeal for a second item)']
+    # Get appeal1 and appeal2 by header index
+    try:
+        appeal1 = row[25]
+        appeal2 = row[218]
+    except ValueError:
+        print("Header not found for appeal types.")
+        appeal1 = appeal2 = None
 
-    fill_header(ws, data)
+    fill_header(ws, row)
 
     # Map funding type to fill function
     funding_type_to_func = {
@@ -121,27 +116,19 @@ def create_appeal_sheet(wb, data, row_num):
     }
 
     # Helper to call the right function for each appeal
-    def handle_appeal(appeal_type, appeal_num, split_data):
+    def handle_appeal(appeal_type, appeal_num):
         func = funding_type_to_func.get(appeal_type)
         if func:
-            func(ws, split_data, appeal_num)
+            func(ws, row, appeal_num)
         else:
             print(f"⚠️ No fill function mapped for: {appeal_type}")
 
-    data_keys = list(data.keys())
-    header_order = data_keys
-    hj_idx = header_order.index('Select Type of Funding (please choose "N/A" if you would not like to appeal for a second item)') - 1 
-    hk_idx = header_order.index('Select Type of Funding (please choose "N/A" if you would not like to appeal for a second item)')  
-
-    data_appeal1 = {k: data[k] for k in header_order[:hj_idx+1]}
-    data_appeal2 = {k: data[k] for k in header_order[hk_idx:]}
-
     if appeal1 and appeal1 != "...":
-        handle_appeal(appeal1, 1, data_appeal1)
-    if appeal2 and appeal2 not in ("...", "N/A"):
-        handle_appeal(appeal2, 2, data_appeal2)
+        handle_appeal(appeal1, 1)
+    if appeal2 and appeal2 not in ("...", "N/A", 'n/a', 'N/a', 'na', 'NA'):
+        handle_appeal(appeal2, 2)
 
-    fill_footer(ws, data)
+    fill_footer(ws, row)
     print(f"✅ -- Data inputted. --")
 
 
@@ -168,14 +155,13 @@ def copy_template_to_sheet(wb, ws, template_path):
     for row_num, row_dim in template_ws.row_dimensions.items():
         ws.row_dimensions[row_num].height = row_dim.height
 
-def fill_header(ws, data):
-    pass
-    # ws["A1"] = "Organization Name: " + str(data.get("Recognized Organization Name on the getInvolved Platform", ""))
-    # ws["A1"].font = Font(bold=True, size=16)
-    # ws["B1"] = "Submitted by: " + data.get("Contact Person Name", "") + " | Email: " + data.get("Contact Email (must be checked daily) ", "") + " | Phone: " + str(data.get("Contact Phone Number", "")) + " | Position: " + data.get("Position", "")
-    # ws["B1"].font = Font(bold=True)
-    # ws["K1"] = "SABO: " + str(data.get("SABO Account Number:", ""))
-    # ws["K1"].font = Font(bold=True, size=16)
+def fill_header(ws, row):
+    ws["A1"] = "Organization Name: " + (row[12])
+    ws["A1"].font = Font(bold=True, size=16)
+    ws["B1"] = "Submitted by: " + (row[16]) + " | Email: " + (row[17]) + " | Phone: " + str(row[18]) + " | Position: " + (row[19])
+    ws["B1"].font = Font(bold=True)
+    ws["K1"] = "SABO: " + str(row[14].strip().replace(" ", "").replace("-", "").replace("#", ""))
+    ws["K1"].font = Font(bold=True, size=16)
 
 
 # All fill functions now take appeal_num to distinguish between first and second appeal
@@ -197,78 +183,81 @@ def fill_organizational_maintenance(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Organizational Maintenance")
 
-        # Room Rental and Equipment + Storage (TODO)
+        # Room Rental and Equipment + Storage
         try:
-            ws["B24"] = float(data["AC"].strip().replace("$", ""))
+           ws["B24"] = float(data[28].strip().replace("$", "").replace(",", "")) + float(data[42].strip().replace("$", "").replace(",", ""))
         except (ValueError, TypeError):
-            ws["B24"] = data["AC"]
-        ws["C24"] = data["AD"]
+           if (str(data[28]).strip().replace("$", "").replace(",", "") not in ("", "0", "0.0", "N/A") or
+               str(data[42]).strip().replace("$", "").replace(",", "") not in ("", "0", "0.0", "N/A")):
+               ws["B24"] = str(data[28]) + " " + str(data[42])
+
+        if str(data[42]).strip().replace("$", "").replace(",", "") not in ("", "0", "0.0", "N/A"):
+            ws["C24"] = data[29] + " " + data[43]
+        else:
+            ws["C24"] = data[29]
 
         # Office Supplies
-        # try:
-        #     ws["B25"] = float(data["Office Supplies:Ê"].strip().replace("$", ""))
-        # except (ValueError, TypeError):
-        #     ws["B25"] = data["Office Supplies:Ê"]
-        # # Only fill description if B25 is not 0 or empty
-        # b25_value = ws["B25"].value
-        # if b25_value not in (None, "", 0, "0", 0.0):
-        #     ws["C25"] = data["Description for Office Supplies:Ê"]
+        try:
+            ws["B25"] = float(data[30].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B25"] = data[30]
+        ws["C25"] = data[31]
 
-        # # Advertising
-        # try:
-        #     ws["B26"] = float(data["Advertising:Ê"].strip().replace("$", ""))
-        # except (ValueError, TypeError):
-        #     ws["B26"] = data["Advertising:Ê For General Meetings only!"]
-        # ws["C26"] = data["Description for Advertising:"]
+        # Advertising
+        try:
+            ws["B26"] = float(data[40].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B26"] = data[40]
+        ws["C26"] = data[41]
 
-        # # Food for General Meetings
-        # try:
-        #     ws["B27"] = float(data["Food for General Interest Meetings:"].strip().replace("$", ""))
-        # except (ValueError, TypeError):
-        #     ws["B27"] = data["Food for General Interest Meetings:"]
-        # ws["C27"] = data["Description for Food for General Interest Meetings:"]
+        # Food for General Meetings
+        try:
+            ws["B27"] = float(data[44].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B27"] = data[44]
+        ws["C27"] = data[45]
 
-        # # Promotional Giveaways
-        # try:
-        #     ws["B28"] = float(data["Promotional Giveaways:Ê Promotional giveaways must go towards everyone (i.e. we do not fund gift card prizes,but we fund promotional pens that are distributed to everyone)"].strip().replace("$", ""))
-        # except (ValueError, TypeError):
-        #     ws["B28"] = data["Promotional Giveaways:Ê Promotional giveaways must go towards everyone (i.e. we do not fund gift card prizes,but we fund promotional pens that are distributed to everyone)"]
-        # ws["C28"] = data["Description for Promotional Giveaways:"]
+        # Promotional Giveaways
+        try:
+            ws["B28"] = float(data[32].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B28"] = data[32]
+        ws["C28"] = data[33]
 
-        # # Software
-        # try:
-        #     ws["B30"] = float(data["Software (for University owned computers)/Website (hosting fees):"].strip().replace("$", ""))
-        # except (ValueError, TypeError):
-        #     ws["B30"] = data["Software (for University owned computers)/Website (hosting fees):"]
-        # ws["C30"] = data["Description for Software (for University owned computers)/Website (hosting fees):Ê"]
+        # Software
+        try:
+            ws["B30"] = float(data[36].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B30"] = data[36]
+        ws["C30"] = data[37]
 
-        # # Duplications
-        # try:
-        #     ws["B31"] = float(data["Duplications: Copies of programs to be distributed during an event."].strip().replace("$", ""))
-        # except (ValueError, TypeError):
-        #     ws["B31"] = data["Duplications: Copies of programs to be distributed during an event."]
-        # ws["C31"] = data["Description for Duplications:"]
+        # Duplications
+        try:
+            ws["B31"] = float(data[38].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B31"] = data[38]
+        ws["C31"] = data[39]
 
-        # # Phone Charges (Film Processing)
-        # try:
-        #     ws["B32"] = float(data["Film Processing:"].strip().replace("$", ""))
-        # except (ValueError, TypeError):
-        #     ws["B32"] = data["Film Processing:"]
-        # ws["C32"] = data["Description for Film Processing:"]
+        # Phone Charges (Film Processing)
+        try:
+            ws["B32"] = float(data[34].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B32"] = data[34]
+        ws["C32"] = data[35]
 
-        # # Uniforms/Costumes
-        # try:
-        #     ws["B33"] = float(data["Uniforms/Costumes:Ê For performing groups only!"].strip().replace("$", ""))
-        # except (ValueError, TypeError):
-        #     ws["B33"] = data["Uniforms/Costumes:Ê For performing groups only!"]
-        # ws["C33"] = data["Description for Uniforms/Costumes:"]
+        # Uniforms/Costumes
+        try:
+            ws["B33"] = float(data[46].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B33"] = data[46]
+        ws["C33"] = data[47]
 
-        # # Other TODO
-        # try:
-        #     ws["B35"] = float(data["Other:"].strip().replace("$", ""))
-        # except (ValueError, TypeError):
-        #     ws["B35"] = data["Other:Ê Please specify in the description box what this is for."]
-        # ws["C35"] = data["Description for Other:"]
+        # Other TODO
+        try:
+            ws["B35"] = float(data[48].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B35"] = data[48]
+        ws["C35"] = data[49]
 
     else:
         print("----> Second Appeal: Organizational Maintenance")
