@@ -111,8 +111,8 @@ def create_appeal_sheet(wb, header, row):
         "Stand Alone Trip - Other": fill_other_trip,
         "Series Trip - Conference/Team Competition": fill_standalone_trip_competition,  # adjust if needed
         "Series Trip - Other": fill_other_trip,  # adjust if needed
-        "Magazine or Journal": fill_media_publication,
-        "Newspaper": fill_media_publication,
+        "Magazine or Journal": fill_journal_magazine,
+        "Newspaper": fill_newspaper,
     }
 
     # Helper to call the right function for each appeal
@@ -155,6 +155,7 @@ def copy_template_to_sheet(wb, ws, template_path):
     for row_num, row_dim in template_ws.row_dimensions.items():
         ws.row_dimensions[row_num].height = row_dim.height
 
+
 def fill_header(ws, row):
     ws["A1"] = "Organization Name: " + (row[12])
     ws["A1"].font = Font(bold=True, size=16)
@@ -164,13 +165,65 @@ def fill_header(ws, row):
     ws["K1"].font = Font(bold=True, size=16)
 
 
-# All fill functions now take appeal_num to distinguish between first and second appeal
 def fill_program1(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Standalone Program")
+
+        # Program Info Header
+        ws["A2"] = f"Program 1 Name: {str(data[65]).strip()}"
+        ws["A2"].font = Font(bold=True)
+        ws["A3"] = f"Event Description: {str(data[66]).strip()}"
+        ws["B3"] = f"Date: {str(data[67]).strip()}"
+        ws["C3"] = f"Attendance: {str(data[69]).strip()}"
+        ws["D3"] = f"Location: {str(data[70]).strip()}"
+        ws["E3"] = f"Admission Fee: {str(data[71]).strip()}"
+
+        # Room Rental and Equipment
+        try:
+            ws["B5"] = float(data[74].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B5"] = data[74]
+        ws["C5"] = data[75]
+
+        # Advertising
+        try:
+            ws["B6"] = float(data[76].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B6"] = data[76]
+        ws["C6"] = data[77]
+
+        # Food
+        try:
+            ws["B7"] = float(data[78].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B7"] = data[78]
+        ws["C7"] = data[79]
+
+        # Supplies + Duplications
+        try:
+            ws["B8"] = float(data[80].strip().replace("$", "").replace(",", "")) + float(data[82].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B8"] = f"{data[80]} + {data[82]}"
+        ws["C8"] = data[81] + " | Duplications: " + data[83]
+
+        # Contracts
+        contract_indices = [84, 85, 86, 87, 88, 89, 90, 91]
+        contracts = [data[i] for i in contract_indices]
+        ws["C9"] = ", ".join(str(c) for c in contracts if str(c).strip())
+
+        ws["B16"] = data[92]
+
+        # Other
+        try:
+            ws["B17"] = float(data[93].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError): 
+            ws["B17"] = data[93]
+        ws["C17"] = data[94]
+
     else:
         fill_program2(ws, data, appeal_num)
     pass
+
 
 def fill_program2(ws, data, appeal_num):
     if appeal_num == 2:
@@ -178,6 +231,7 @@ def fill_program2(ws, data, appeal_num):
     else:
         print("ERROR: fill_program2 called for appeal_num other than 2")
     pass
+
 
 def fill_organizational_maintenance(ws, data, appeal_num):
     if appeal_num == 1:
@@ -262,7 +316,6 @@ def fill_organizational_maintenance(ws, data, appeal_num):
     else:
         print("----> Second Appeal: Organizational Maintenance")
 
-    
 
 def fill_series_program(ws, data, appeal_num):
     if appeal_num == 1:
@@ -271,12 +324,86 @@ def fill_series_program(ws, data, appeal_num):
         print("----> Second Appeal: Series Program")
     pass
 
-def fill_media_publication(ws, data, appeal_num):
+
+def fill_journal_magazine(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Media Publication")
+
+        # Publication Section Header
+        ws["A38"] = "Media Publication (Journal/Magazine)"
+
+        # Number of Issues
+        try:
+            ws["B42"] = int(data[52].strip().replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B42"] = data[52]
+
+        # Number of Pages per Issues
+        try:
+            ws["B44"] = int(data[53].strip().replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B44"] = data[53]
+
+        # Cost per Page
+        ws["C43"] = f"Cost per page: {data[54]}"
+
+        # Cost per Issue
+        ws["C44"] = f"Cost per issue: {data[55]}"
+
+        # Total Printing Costs
+        if isinstance(ws["B42"].value, int) and isinstance(ws["B44"].value, int):
+            try:
+                ws["B45"] = ws["B42"].value * ws["B44"].value * float(data[54].strip().replace("$", "").replace(",", ""))
+            except (ValueError, TypeError):
+                ws["B45"] = f"{data[52]} x {data[53]} x {data[54]}"
+
+        # Total Delivery Costs
+        try:
+            ws["B46"] = int(data[52].strip().replace(",", "")) * float(data[56].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B46"] = f"{data[52]} x {data[56]}"
+
     else:
         print("----> Second Appeal: Media Publication")
     pass
+
+
+def fill_newspaper(ws, data, appeal_num):
+    if appeal_num == 1:
+        print("----> First Appeal: Media Publication")
+
+        # Publication Section Header
+        ws["A38"] = "Media Publication (Newspaper)"
+
+        # Number of Pages per Issues
+        try:
+            ws["B44"] = int(data[60].strip().replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B44"] = data[60]
+
+        # Cost per Page
+        ws["C43"] = f"Cost per page: {data[61]}"
+
+        # Cost per Issue
+        ws["C44"] = f"Cost per issue: {data[62]}"
+
+        # Total Printing Costs
+        if isinstance(ws["B42"].value, int) and isinstance(ws["B44"].value, int):
+            try:
+                ws["B45"] = ws["B42"].value * ws["B44"].value * float(data[54].strip().replace("$", "").replace(",", ""))
+            except (ValueError, TypeError):
+                ws["B45"] = f"{data[52]} x {data[53]} x {data[54]}"
+
+        # Total Delivery Costs
+        try:
+            ws["B46"] = int(1) * float(data[63].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B46"] = f"{1} x {data[63]}"
+
+    else:
+        print("----> Second Appeal: Media Publication")
+    pass
+
 
 def fill_other_trip(ws, data, appeal_num):
     if appeal_num == 1:
@@ -285,12 +412,14 @@ def fill_other_trip(ws, data, appeal_num):
         print("----> Second Appeal: Other Trip")
     pass
 
+
 def fill_standalone_trip_competition(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Standalone Trip/Competition")
     else:
         print("----> Second Appeal: Standalone Trip/Competition")
     pass
+
 
 def fill_standalone_conference_team_competition(ws, data, appeal_num):
     if appeal_num == 1:
@@ -299,8 +428,10 @@ def fill_standalone_conference_team_competition(ws, data, appeal_num):
         print("----> Second Appeal: Standalone Conference/Team Competition")
     pass
 
+
 def fill_footer(ws, data):
     pass
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
