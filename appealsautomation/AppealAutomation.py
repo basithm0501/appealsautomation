@@ -86,6 +86,7 @@ def create_data_list(csv_path, row_num):
     print(f"✅ -- Data processed for row: {row_num} --")
     return header_row, data_row
 
+
 def create_appeal_sheet(wb, header, row):
     org_nickname = re.sub(r'[\\/*?:\[\]]', '_', row[11].strip().replace(" ", "_"))
     sheet_name = org_nickname[:31]
@@ -156,7 +157,7 @@ def copy_template_to_sheet(wb, ws, template_path):
     for row_num, row_dim in template_ws.row_dimensions.items():
         ws.row_dimensions[row_num].height = row_dim.height
 
-
+# Done
 def fill_header(ws, row):
     ws["A1"] = "Organization Name: " + (row[12])
     ws["A1"].font = Font(bold=True, size=16)
@@ -165,7 +166,7 @@ def fill_header(ws, row):
     ws["K1"] = "SABO: " + str(row[14].strip().replace(" ", "").replace("-", "").replace("#", ""))
     ws["K1"].font = Font(bold=True, size=16)
 
-
+# Done
 def fill_program1(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Standalone Program")
@@ -210,7 +211,7 @@ def fill_program1(ws, data, appeal_num):
         # Contracts
         contract_indices = [84, 85, 86, 87, 88, 89, 90, 91]
         contracts = [data[i] for i in contract_indices]
-        ws["B16"] = ", ".join(str(c) for c in contracts if str(c).strip())
+        ws["C9"] = ", ".join(str(c) for c in contracts if str(c).strip())
 
         ws["B9"] = data[92]
 
@@ -225,7 +226,7 @@ def fill_program1(ws, data, appeal_num):
         fill_program2(ws, data, appeal_num)
     pass
 
-
+# TODO
 def fill_program2(ws, data, appeal_num):
     if appeal_num == 2:
         print("----> Second Appeal: Standalone Program")
@@ -233,7 +234,7 @@ def fill_program2(ws, data, appeal_num):
         print("ERROR: fill_program2 called for appeal_num other than 2")
     pass
 
-
+# TODO 2
 def fill_organizational_maintenance(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Organizational Maintenance")
@@ -317,15 +318,69 @@ def fill_organizational_maintenance(ws, data, appeal_num):
     else:
         print("----> Second Appeal: Organizational Maintenance")
 
-
+# TODO both
 def fill_series_program(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Series Program")
+
+        # Program Info Header
+        ws["G21"] = "Series Program Name: " + str(data[98]).strip()
+        ws["J21"] = "Location: " + str(data[105]).strip()
+        ws["K21"] = "Admissions Fee: " + str(data[106]).strip()
+        ws["L21"] = "Installments: " + str(data[101]).strip()
+        ws["G22"] = "Description: " + str(data[99]).strip()
+        ws["K22"] = "Attendance: " + str(data[103]).strip()
+        ws["L22"] = "Dates: " + str(data[102]).strip()
+
+        # Room Rental and Equipment
+        try:
+            ws["H24"] = float(data[108].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H24"] = data[108]
+        ws["I24"] = data[109]
+
+        # Advertising
+        try:
+            ws["H25"] = float(data[110].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H25"] = data[110]
+        ws["I25"] = data[111]
+
+        # Food
+        try:
+            ws["H26"] = float(data[112].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H26"] = data[112]
+        ws["I26"] = data[113]
+
+        # Supplies + Duplications
+        try:
+            ws["H27"] = float(data[114].strip().replace("$", "").replace(",", "")) + float(data[116].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H28"] = f"{data[114]} + {data[116]}"
+        ws["I27"] = "Supplies: " + data[115] + " | Duplications: " + data[117]
+
+        # Contracts
+        contract_indices = [118, 119, 120, 121, 122, 123, 124]
+        contracts = [data[i] for i in contract_indices]
+        ws["H29"] = ", ".join(str(c) for c in contracts if str(c).strip())
+        ws["I28"] = data[125]
+
+        ws["H28"] = data[126]
+
+        # Other
+        try:
+            ws["H30"] = float(data[127].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H30"] = data[127]
+        ws["I30"] = data[128]
+
+
     else:
         print("----> Second Appeal: Series Program")
     pass
 
-
+# TODO 2
 def fill_journal_magazine(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Media Publication")
@@ -368,7 +423,7 @@ def fill_journal_magazine(ws, data, appeal_num):
         print("----> Second Appeal: Media Publication")
     pass
 
-
+# TODO 2
 def fill_newspaper(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Media Publication")
@@ -405,7 +460,7 @@ def fill_newspaper(ws, data, appeal_num):
         print("----> Second Appeal: Media Publication")
     pass
 
-
+# TODO both
 def fill_other_trip(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Other Trip")
@@ -413,7 +468,7 @@ def fill_other_trip(ws, data, appeal_num):
         print("----> Second Appeal: Other Trip")
     pass
 
-
+# TODO both
 def fill_standalone_trip_competition(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Standalone Trip/Competition")
@@ -421,7 +476,7 @@ def fill_standalone_trip_competition(ws, data, appeal_num):
         print("----> Second Appeal: Standalone Trip/Competition")
     pass
 
-
+# TODO both
 def fill_standalone_conference_team_competition(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Standalone Conference/Team Competition")
@@ -429,7 +484,7 @@ def fill_standalone_conference_team_competition(ws, data, appeal_num):
         print("----> Second Appeal: Standalone Conference/Team Competition")
     pass
 
-
+# TODO
 def fill_footer(ws, data):
     pass
 
