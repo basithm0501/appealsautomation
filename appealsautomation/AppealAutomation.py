@@ -213,10 +213,62 @@ def fill_program1(ws, data, appeal_num):
         fill_program2(ws, data, appeal_num)
     pass
 
-# TODO
+# Done
 def fill_program2(ws, data, appeal_num):
     if appeal_num == 2:
         print("----> Second Appeal: Standalone Program")
+
+        # Program Info Header
+        ws["G2"] = f"Program 2 Name: {str(data[256]).strip()}"
+        ws["G2"].font = Font(bold=True)
+        ws["G3"] = f"Event Description: {str(data[257]).strip()}"
+        ws["H3"] = f"Date: {str(data[258]).strip()}"
+        ws["I3"] = f"Attendance: {str(data[260]).strip()}"
+        ws["J3"] = f"Location: {str(data[262]).strip()}"
+        ws["K3"] = f"Admission Fee: {str(data[263]).strip()}"
+
+        # Room Rental and Equipment
+        try:
+            ws["H5"] = float(data[265].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H5"] = data[265]
+        ws["I5"] = data[266]
+
+        # Advertising
+        try:
+            ws["H6"] = float(data[267].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H6"] = data[267]
+        ws["I6"] = data[268]
+
+        # Food
+        try:
+            ws["H7"] = float(data[269].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H7"] = data[269]
+        ws["I7"] = data[270]
+
+        # Supplies + Duplications
+        try:
+            ws["H8"] = float(data[271].strip().replace("$", "").replace(",", "")) + float(data[282].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H8"] = f"{data[271]} + {data[282]}"
+        ws["I8"] = data[272] + " | Duplications: " + data[283]
+
+        # Contracts
+        contract_indices = [274, 275, 276, 277, 278, 279, 280, 281]
+        contracts = [data[i] for i in contract_indices]
+        ws["I9"] = ", ".join(str(c) for c in contracts if str(c).strip())
+
+        ws["H9"] = data[273]
+
+        # Other
+        try:
+            ws["H17"] = float(data[284].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError): 
+            ws["H17"] = data[284]
+        ws["I17"] = data[285]
+
     else:
         print("ERROR: fill_program2 called for appeal_num other than 2")
     pass
@@ -375,7 +427,7 @@ def fill_organizational_maintenance(ws, data, appeal_num):
             ws["B35"] = data[239]
         ws["C35"] = data[240]
 
-# TODO 2
+# Done
 def fill_series_program(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Series Program")
@@ -420,21 +472,72 @@ def fill_series_program(ws, data, appeal_num):
         # Contracts
         contract_indices = [118, 119, 120, 121, 122, 123, 124]
         contracts = [data[i] for i in contract_indices]
-        ws["H29"] = ", ".join(str(c) for c in contracts if str(c).strip())
-        ws["I28"] = data[125]
+        ws["I29"] = ", ".join(str(c) for c in contracts if str(c).strip())
+        ws["I28"] = data[126]
 
-        ws["H28"] = data[126]
+        ws["H28"] = data[125]
 
         # Other
         try:
-            ws["H30"] = float(data[127].strip().replace("$", "").replace(",", ""))
+            ws["H32"] = float(data[127].strip().replace("$", "").replace(",", ""))
         except (ValueError, TypeError):
-            ws["H30"] = data[127]
-        ws["I30"] = data[128]
+            ws["H32"] = data[127]
+        ws["I32"] = data[128]
 
     else:
         print("----> Second Appeal: Series Program")
-    pass
+
+        # Program Info Header
+        ws["G21"] = "Series Program Name: " + str(data[288]).strip()
+        ws["J21"] = "Location: " + str(data[295]).strip()
+        ws["K21"] = "Admissions Fee: " + str(data[296]).strip()
+        ws["L21"] = "Installments: " + str(data[289]).strip()
+        ws["G22"] = "Description: " + str(data[291]).strip()
+        ws["K22"] = "Attendance: " + str(data[293]).strip()
+        ws["L22"] = "Dates: " + str(data[292]).strip()
+
+        # Room Rental and Equipment
+        try:
+            ws["H24"] = float(data[298].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H24"] = data[298]
+        ws["I24"] = data[299]
+
+        # Advertising
+        try:
+            ws["H25"] = float(data[300].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H25"] = data[300]
+        ws["I25"] = data[301]
+
+        # Food
+        try:
+            ws["H26"] = float(data[302].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H26"] = data[302]
+        ws["I26"] = data[303]
+
+        # Supplies + Duplications
+        try:
+            ws["H27"] = float(data[304].strip().replace("$", "").replace(",", "")) + float(data[306].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H28"] = f"{data[304]} + {data[306]}"
+        ws["I27"] = "Supplies: " + data[305] + " | Duplications: " + data[307]
+
+        # Contracts
+        contract_indices = [309, 310, 311, 312, 313, 314, 315]
+        contracts = [data[i] for i in contract_indices]
+        ws["I29"] = ", ".join(str(c) for c in contracts if str(c).strip())
+        ws["I28"] = data[316]
+
+        ws["H28"] = data[308]
+
+        # Other
+        try:
+            ws["H32"] = float(data[317].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H32"] = data[317]
+        ws["I32"] = data[318]
 
 # Done
 def fill_journal_magazine(ws, data, appeal_num):
@@ -514,7 +617,7 @@ def fill_journal_magazine(ws, data, appeal_num):
             
     pass
 
-# TODO 2
+# Done
 def fill_newspaper(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Media Publication")
@@ -771,7 +874,7 @@ def fill_series_conference_team_competition(ws, data, appeal_num):
         print("----> Second Appeal: Series Trip/Competition")
     pass
 
-# TODO 2
+# Done
 def fill_standalone_conference_team_competition(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Standalone Conference/Team Competition")
@@ -834,7 +937,62 @@ def fill_standalone_conference_team_competition(ws, data, appeal_num):
 
     else:
         print("----> Second Appeal: Standalone Conference/Team Competition")
-    pass
+
+         # Header Information
+        ws["G47"] = "Name of Competition/Conference: " + str(data[321]).strip()
+        ws["G47"].font = Font(bold=True)
+        ws["H47"] = "Is this Series, If so Number of installments? NO"
+        ws["H47"].font = Font(bold=True)
+        ws["H49"] = "Location: " + str(data[328]).strip()
+        ws["H49"].font = Font(bold=True)
+        ws["J49"] = "Attendance: " + str(data[323]).strip()
+        ws["J49"].font = Font(bold=True)
+        ws["L49"] = f"Dates: {str(data[324]).strip()} - {str(data[325]).strip()}"
+        ws["L49"].font = Font(bold=True)
+        ws["G46"] = f"Stand Alone Trip/Series - Competition/Conference  (max 6 trips in a series, max 1 series trip per semester) ({str(data[327]).strip()})"
+        ws["G46"].font = Font(bold=True)
+
+        # Transportation
+        try:
+            ws["H51"] = float(data[329].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H51"] = data[329]
+        ws["I51"] = data[330]
+
+        # Parking
+        try:
+            ws["H52"] = float(data[331].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H52"] = data[331]
+        ws["I52"] = data[333]
+
+        # Food
+        try:
+            ws["H53"] = float(data[334].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H53"] = data[334]
+        ws["I53"] = data[335]
+
+        # Lodging
+        try:
+            ws["H54"] = float(data[336].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H54"] = data[336]
+        ws["I54"] = data[337]
+
+        # Registration/Entry Fees + Admission Fees
+        try:
+            ws["H55"] = float(data[338].strip().replace("$", "").replace(",", "")) + float(data[340].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H55"] = data[338] + " + " + data[340]
+        ws["I55"] = data[339] + " | Registration Fees: " + data[341]
+
+        # Other
+        try:
+            ws["H56"] = float(data[342].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H56"] = data[342]
+        ws["I56"] = data[343]
 
 # TODO
 def fill_footer(ws, data):
