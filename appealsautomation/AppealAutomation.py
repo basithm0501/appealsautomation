@@ -7,18 +7,16 @@ from datetime import datetime
 from openpyxl.utils import get_column_letter, column_index_from_string
 import re
 
-TEMPLATE = "AppealsTemplate.xlsx"
-
-def create_appeals_workbook(csv_path, start_row, end_row=None):
+def create_appeals_workbook(template_path, csv_path, start_row, end_row=None):
     csv_path = convert_data_encoding(csv_path)
     wb = openpyxl.Workbook()
     print("✅ -- Workbook created. --")
-    create_template_master_sheet(wb, "AppealsTemplate.xlsx")
+    create_template_master_sheet(wb, template_path)
     if end_row is None:
         end_row = start_row
     for row_num in range(start_row, end_row + 1):
         header, row = create_data_list(csv_path, row_num)
-        create_appeal_sheet(wb, header, row)
+        create_appeal_sheet(wb, header, row, template_path)
 
     date_str = datetime.now().strftime("%Y-%m-%d")
     wb.save(f"CAP_Workbook_{date_str}.xlsx")
@@ -74,11 +72,11 @@ def create_data_list(csv_path, row_num):
     return header_row, data_row
 
 
-def create_appeal_sheet(wb, header, row):
+def create_appeal_sheet(wb, header, row, template_path):
     org_nickname = re.sub(r'[\\/*?:\[\]]', '_', row[11].strip().replace(" ", "_"))
     sheet_name = org_nickname[:31]
     ws = wb.create_sheet(title=sheet_name)
-    copy_template_to_sheet(wb, ws, TEMPLATE)
+    copy_template_to_sheet(wb, ws, template_path)
     print(f"✅ -- Capsheet Created for: {org_nickname} --")
 
     # Get appeal1 and appeal2 by header index
@@ -1149,16 +1147,18 @@ def fill_standalone_conference_team_competition(ws, data, appeal_num):
             ws["H56"] = data[342]
         ws["I56"] = data[343]
 
-# TODO
+# Done
 def fill_footer(ws, data):
+    # No Footers Yet
     pass
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        print('Usage: python AppealAutomation.py <AppealsData.csv> <start_row> <end_row>')
+        print('Usage: python AppealAutomation.py <AppealsTemplate.xlsx> <AppealsData.csv> <start_row> <end_row>')
         sys.exit(1)
-    csv_path = sys.argv[1]
-    start_row = int(sys.argv[2])
-    end_row = int(sys.argv[3]) if len(sys.argv) > 3 else None
-    create_appeals_workbook(csv_path, start_row, end_row)
+    template_path = sys.argv[1]
+    csv_path = sys.argv[2]
+    start_row = int(sys.argv[3])
+    end_row = int(sys.argv[4]) if len(sys.argv) > 4 else None
+    create_appeals_workbook(template_path, csv_path, start_row, end_row)
