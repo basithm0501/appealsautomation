@@ -9,14 +9,16 @@ import re
 
 TEMPLATE = "AppealsTemplate.xlsx"
 
-def create_appeals_workbook(csv_path, row_num):
+def create_appeals_workbook(csv_path, start_row, end_row=None):
     csv_path = convert_data_encoding(csv_path)
     wb = openpyxl.Workbook()
     print("✅ -- Workbook created. --")
     create_template_master_sheet(wb, "AppealsTemplate.xlsx")
-    #TODO update to take multiple rows
-    header, row = create_data_list(csv_path, row_num)
-    create_appeal_sheet(wb, header, row)
+    if end_row is None:
+        end_row = start_row
+    for row_num in range(start_row, end_row + 1):
+        header, row = create_data_list(csv_path, row_num)
+        create_appeal_sheet(wb, header, row)
 
     date_str = datetime.now().strftime("%Y-%m-%d")
     wb.save(f"CAP_Workbook_{date_str}.xlsx")
@@ -58,22 +60,7 @@ def create_template_master_sheet(wb, template_path):
 
     print("✅ -- Template master sheet created. --")
 
-# OLD 
-def create_data_dictionary(csv_path, row_num):
-    with open(csv_path, newline='', encoding='utf-8') as f:
-        # Skip the first two rows (headers)
-        next(f)
-        next(f)
-        reader = csv.DictReader(f, skipinitialspace=True)
-        rows = list(reader)
-    if row_num <= 2 or row_num > len(rows) + 3:
-        raise ValueError('Row number out of range')
-    data = rows[row_num - 1 - 3]  # -1 for 0-based index, - 3 to account for skipped header rows
-    print(f"------------------------ NEW SHEET ------------------------")
-    print(f"✅ -- Data processed for row: {row_num} --")
-    return data
 
-# NEW
 def create_data_list(csv_path, row_num):
     with open(csv_path, newline='', encoding='utf-8') as f:
         reader = csv.reader(f)
@@ -110,9 +97,9 @@ def create_appeal_sheet(wb, header, row):
         "Stand Alone Program": fill_program1,
         "Series Program": fill_series_program,
         "Stand Alone Trip - Conference/Team Competition": fill_standalone_conference_team_competition,
-        "Stand Alone Trip - Other": fill_other_trip,
-        "Series Trip - Conference/Team Competition": fill_standalone_trip_competition,  # adjust if needed
-        "Series Trip - Other": fill_other_trip,  # adjust if needed
+        "Stand Alone Trip - Other": fill_standalone_other_trip,
+        "Series Trip - Conference/Team Competition": fill_series_conference_team_competition, 
+        "Series Trip - Other": fill_series_other_trip,
         "Magazine or Journal": fill_journal_magazine,
         "Newspaper": fill_newspaper,
     }
@@ -318,7 +305,7 @@ def fill_organizational_maintenance(ws, data, appeal_num):
     else:
         print("----> Second Appeal: Organizational Maintenance")
 
-# TODO both
+# TODO 2
 def fill_series_program(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Series Program")
@@ -374,7 +361,6 @@ def fill_series_program(ws, data, appeal_num):
         except (ValueError, TypeError):
             ws["H30"] = data[127]
         ws["I30"] = data[128]
-
 
     else:
         print("----> Second Appeal: Series Program")
@@ -460,26 +446,248 @@ def fill_newspaper(ws, data, appeal_num):
         print("----> Second Appeal: Media Publication")
     pass
 
-# TODO both
-def fill_other_trip(ws, data, appeal_num):
+# TODO 2
+def fill_standalone_other_trip(ws, data, appeal_num):
     if appeal_num == 1:
-        print("----> First Appeal: Other Trip")
+        print("----> First Appeal: Stand Alone Other Trip")
+
+        # Header Information
+        ws["G36"] = "Trip Name: " + str(data[153]).strip()
+        ws["G36"].font = Font(bold=True)
+        ws["H36"] = "Is this Series, If so Number of installments? NO"
+        ws["H36"].font = Font(bold=True)
+        ws["K36"] = "Location: " + str(data[159]).strip()
+        ws["K36"].font = Font(bold=True)
+        ws["H37"] = "Attendance: " + str(data[157]).strip()
+        ws["H37"].font = Font(bold=True)
+        ws["J37"] = f"Dates: {str(data[155]).strip()} - {str(data[156]).strip()}"
+        ws["J37"].font = Font(bold=True)
+        ws["G35"] = "Other Trip (Stand Alone | Series Trip) (Stand Alone)"
+        ws["G35"].font = Font(bold=True)
+
+        # Advertising
+        try:
+            ws["H39"] = float(data[161].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H39"] = data[161]
+        ws["I39"] = data[162]
+
+        # Transportation
+        try:
+            ws["H40"] = float(data[163].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H40"] = data[163]
+        ws["I40"] = data[164]
+
+        # Admission/Entry Fees
+        try:
+            ws["H41"] = float(data[165].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H41"] = data[165]
+        ws["I41"] = data[166]
+
+        # Food
+        try:
+            ws["H42"] = float(data[167].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H42"] = data[167]
+        ws["I42"] = data[168]
+
+        # Other
+        try:
+            ws["H44"] = float(data[169].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H44"] = data[169]
+        ws["I44"] = data[170]
+
     else:
-        print("----> Second Appeal: Other Trip")
+        print("----> Second Appeal: Stand Alone Other Trip")
     pass
 
-# TODO both
-def fill_standalone_trip_competition(ws, data, appeal_num):
+# TODO 2
+def fill_series_other_trip(ws, data, appeal_num):
     if appeal_num == 1:
-        print("----> First Appeal: Standalone Trip/Competition")
+        print("----> First Appeal: Series Other Trip")
+
+        # Header Information
+        ws["G36"] = "Trip Name: " + str(data[199]).strip()
+        ws["G36"].font = Font(bold=True)
+        ws["H36"] = "Is this Series, If so Number of installments? YES"
+        ws["H36"].font = Font(bold=True)
+        ws["K36"] = "Location: " + str(data[205]).strip()
+        ws["K36"].font = Font(bold=True)
+        ws["H37"] = "Attendance: " + str(data[203]).strip()
+        ws["H37"].font = Font(bold=True)
+        ws["J37"] = f"Dates: {str(data[201]).strip()} - {str(data[202]).strip()}"
+        ws["J37"].font = Font(bold=True)
+        ws["G35"] = "Other Trip (Stand Alone | Series Trip) (Series)"
+        ws["G35"].font = Font(bold=True)
+
+        # Advertising
+        try:
+            ws["H39"] = float(data[207].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H39"] = data[207]
+        ws["I39"] = data[208]
+
+        # Transportation
+        try:
+            ws["H40"] = float(data[209].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H40"] = data[209]
+        ws["I40"] = data[210]
+
+        # Admission/Entry Fees
+        try:
+            ws["H41"] = float(data[211].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H41"] = data[211]
+        ws["I41"] = data[212]
+
+        # Food
+        try:
+            ws["H42"] = float(data[213].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H42"] = data[213]
+        ws["I42"] = data[214]
+
+        # Other
+        try:
+            ws["H44"] = float(data[215].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["H44"] = data[215]
+        ws["I44"] = data[216]
+
     else:
-        print("----> Second Appeal: Standalone Trip/Competition")
+        print("----> Second Appeal: Series Other Trip")
     pass
 
-# TODO both
+# TODO 2
+def fill_series_conference_team_competition(ws, data, appeal_num):
+    if appeal_num == 1:
+        print("----> First Appeal: Series Trip/Competition")
+
+        # Header Information
+        ws["A53"] = "Name of Competition/Conference: " + str(data[173]).strip()
+        ws["A53"].font = Font(bold=True)
+        ws["B53"] = "Is this Series, If so Number of installments? YES"
+        ws["B53"].font = Font(bold=True)
+        ws["B55"] = "Location: " + str(data[181]).strip()
+        ws["B55"].font = Font(bold=True)
+        ws["D55"] = "Attendance: " + str(data[177]).strip()
+        ws["D55"].font = Font(bold=True)
+        ws["F55"] = f"Dates: {str(data[175]).strip()} - {str(data[176]).strip()}"
+        ws["F55"].font = Font(bold=True)
+        ws["A52"] = f"Stand Alone Trip/Series - Competition/Conference  (max 6 trips in a series, max 1 series trip per semester) ({str(data[180]).strip()})"
+        ws["A52"].font = Font(bold=True)
+
+        # Transportation
+        try:
+            ws["B57"] = float(data[185].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B57"] = data[185]
+        ws["C57"] = data[186]
+
+        # Parking
+        try:
+            ws["B58"] = float(data[187].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B58"] = data[187]
+        ws["C58"] = data[188]
+
+        # Food
+        try:
+            ws["B59"] = float(data[189].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B59"] = data[189]
+        ws["C59"] = data[190]
+
+        # Lodging
+        try:
+            ws["B60"] = float(data[191].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B60"] = data[191]
+        ws["C60"] = data[192]
+
+        # Registration/Entry Fees
+        try:
+            ws["B61"] = float(data[193].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B61"] = data[193]
+        ws["C61"] = data[194]
+
+        # Other
+        try:
+            ws["B62"] = float(data[195].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B62"] = data[195]
+        ws["C62"] = data[196]
+
+    else:
+        print("----> Second Appeal: Series Trip/Competition")
+    pass
+
+# TODO 2
 def fill_standalone_conference_team_competition(ws, data, appeal_num):
     if appeal_num == 1:
         print("----> First Appeal: Standalone Conference/Team Competition")
+        
+        # Header Information
+        ws["A53"] = "Name of Competition/Conference: " + str(data[130]).strip()
+        ws["A53"].font = Font(bold=True)
+        ws["B53"] = "Is this Series, If so Number of installments? NO"
+        ws["B53"].font = Font(bold=True)
+        ws["B55"] = "Location: " + str(data[138]).strip()
+        ws["B55"].font = Font(bold=True)
+        ws["D55"] = "Attendance: " + str(data[134]).strip()
+        ws["D55"].font = Font(bold=True)
+        ws["F55"] = f"Dates: {str(data[132]).strip()} - {str(data[133]).strip()}"
+        ws["F55"].font = Font(bold=True)
+        ws["A52"] = f"Stand Alone Trip/Series - Competition/Conference  (max 6 trips in a series, max 1 series trip per semester) ({str(data[137]).strip()})"
+        ws["A52"].font = Font(bold=True)
+
+        # Transportation
+        try:
+            ws["B57"] = float(data[140].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B57"] = data[140]
+        ws["C57"] = data[141]
+
+        # Parking
+        try:
+            ws["B58"] = float(data[142].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B58"] = data[142]
+        ws["C58"] = data[143]
+
+        # Food
+        try:
+            ws["B59"] = float(data[144].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B59"] = data[144]
+        ws["C59"] = data[145]
+
+        # Lodging
+        try:
+            ws["B60"] = float(data[146].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B60"] = data[146]
+        ws["C60"] = data[147]
+
+        # Registration/Entry Fees
+        try:
+            ws["B61"] = float(data[148].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B61"] = data[148]
+        ws["C61"] = data[149]
+
+        # Other
+        try:
+            ws["B62"] = float(data[150].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B62"] = data[150]
+        ws["C62"] = data[151]
+
     else:
         print("----> Second Appeal: Standalone Conference/Team Competition")
     pass
@@ -491,8 +699,9 @@ def fill_footer(ws, data):
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        print('Usage: python AppealAutomation.py <AppealsData.csv> <row_number>') #TODO update to take multiple rows
+        print('Usage: python AppealAutomation.py <AppealsData.csv> <start_row> <end_row>')
         sys.exit(1)
     csv_path = sys.argv[1]
-    row_num = int(sys.argv[2])
-    create_appeals_workbook(csv_path, row_num)
+    start_row = int(sys.argv[2])
+    end_row = int(sys.argv[3]) if len(sys.argv) > 3 else None
+    create_appeals_workbook(csv_path, start_row, end_row)
