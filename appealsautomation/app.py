@@ -5,15 +5,16 @@ import shutil
 from AppealAutomation import create_appeals_workbook
 import glob
 
-st.title("Appeals Automation Frontend")
+st.title("Appeals Capsheet Generator")
 
-st.write("Upload your Appeals Template and Data CSV, then select a row to generate a capsheet.")
+st.write("For internal use by the RUSA Allocations Board.")
+st.write("Upload your Appeals Template (as an xlsx file) and Appeals Data File (as a csv file), then select the rows that you would like to process into a capsheet.")
 
 uploaded_template = st.file_uploader("Upload Appeals Template (.xlsx)", type=["xlsx"])
 uploaded_csv = st.file_uploader("Upload Appeals Data (.csv)", type=["csv"])
 col1, col2 = st.columns(2)
 with col1:
-    start_row = st.number_input("Start Row", min_value=1, step=1, value=1)
+    start_row = st.number_input("Start Row", min_value=1, step=1, value=4)
 with col2:
     end_row = st.number_input("End Row", min_value=1, step=1, value=start_row)
 
