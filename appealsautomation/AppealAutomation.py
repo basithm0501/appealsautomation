@@ -146,8 +146,9 @@ def copy_template_to_sheet(wb, ws, template_path):
 def fill_header(ws, row):
     ws["A1"] = "Organization Name: " + (row[12])
     ws["A1"].font = Font(bold=True, size=16)
-    ws["B1"] = "Submitted by: " + (row[16]) + " | Email: " + (row[17]) + " | Phone: " + str(row[18]) + " | Position: " + (row[19])
-    ws["B1"].font = Font(bold=True)
+    ws["B1"] = row[23]
+    ws["C1"] = "Submitted by: " + (row[16]) + " | Email: " + (row[17]) + " | Phone: " + str(row[18]) + " | Position: " + (row[19])
+    ws["C1"].font = Font(bold=True)
     ws["K1"] = "SABO: " + str(row[14].strip().replace(" ", "").replace("-", "").replace("#", ""))
     ws["K1"].font = Font(bold=True, size=16)
 
@@ -162,8 +163,8 @@ def fill_program1(ws, data, appeal_num):
         ws["A3"] = f"Event Description: {str(data[66]).strip()}"
         ws["B3"] = f"Date: {str(data[67]).strip()}"
         ws["C3"] = f"Attendance: {str(data[69]).strip()}"
-        ws["D3"] = f"Location: {str(data[70]).strip()}"
-        ws["E3"] = f"Admission Fee: {str(data[71]).strip()}"
+        ws["D3"] = f"Location: {str(data[71]).strip()}"
+        ws["E3"] = f"Admission Fee: {str(data[72]).strip()}"
 
         # Room Rental and Equipment
         try:
