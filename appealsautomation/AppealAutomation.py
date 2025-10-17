@@ -99,6 +99,9 @@ def create_appeal_sheet(wb, header, row, template_path):
         "Series Trip - Conference/Team Competition": fill_series_conference_team_competition, 
         "Series Trip - Other": fill_series_other_trip,
         "Magazine or Journal": fill_journal_magazine,
+        "Journal or Magazine": fill_journal_magazine,  # Handle both word orders
+        "Magazine/Journal": fill_journal_magazine,  # Handle different way
+        "Journal/Magazine": fill_journal_magazine,  # Handle different way
         "Newspaper": fill_newspaper,
     }
 
@@ -577,6 +580,12 @@ def fill_journal_magazine(ws, data, appeal_num):
         except (ValueError, TypeError):
             ws["B46"] = f"{data[52]} x {data[56]}"
 
+        # Total Requested
+        try:
+            ws["B51"] = float(data[57].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B51"] = data[57]
+
     else:
         print("----> Second Appeal: Media Publication")
 
@@ -585,35 +594,41 @@ def fill_journal_magazine(ws, data, appeal_num):
 
         # Number of Issues
         try:
-            ws["B42"] = int(data[242].strip().replace(",", ""))
+            ws["B42"] = int(data[243].strip().replace(",", ""))
         except (ValueError, TypeError):
-            ws["B42"] = data[242]
+            ws["B42"] = data[243]
 
         # Number of Pages per Issues
         try:
-            ws["B44"] = int(data[243].strip().replace(",", ""))
+            ws["B44"] = int(data[244].strip().replace(",", ""))
         except (ValueError, TypeError):
-            ws["B44"] = data[243]
+            ws["B44"] = data[244]
 
         # Cost per Page
-        ws["C43"] = f"Cost per page: {data[244]}"
+        ws["C43"] = f"Cost per page: {data[245]}"
 
         # Cost per Issue
-        ws["C44"] = f"Cost per issue: {data[245]}"
+        ws["C44"] = f"Cost per issue: {data[246]}"
 
         # Total Printing Costs
         if isinstance(ws["B42"].value, int) and isinstance(ws["B44"].value, int):
             try:
-                ws["B45"] = ws["B42"].value * ws["B44"].value * float(data[244].strip().replace("$", "").replace(",", ""))
+                ws["B45"] = ws["B42"].value * ws["B44"].value * float(data[245].strip().replace("$", "").replace(",", ""))
             except (ValueError, TypeError):
-                ws["B45"] = f"{data[242]} x {data[243]} x {data[244]}"
+                ws["B45"] = f"{data[243]} x {data[244]} x {data[245]}"
 
         # Total Delivery Costs
         try:
-            ws["B46"] = int(data[242].strip().replace(",", "")) * float(data[246].strip().replace("$", "").replace(",", ""))
+            ws["B46"] = int(data[242].strip().replace(",", "")) * float(data[247].strip().replace("$", "").replace(",", ""))
         except (ValueError, TypeError):
-            ws["B46"] = f"{data[242]} x {data[246]}"
-            
+            ws["B46"] = f"{data[242]} x {data[247]}"
+
+        # Total Requested
+        try:
+            ws["B51"] = float(data[248].strip().replace("$", "").replace(",", ""))
+        except (ValueError, TypeError):
+            ws["B51"] = data[248]
+
     pass
 
 # Done
